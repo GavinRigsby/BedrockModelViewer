@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BedrockModelViewer": {
+      "commandName": "Project",
+      "commandLineArgs": "-m \"D:\\MCModTools\\MCModTools\\Vanilla\\VanillaResources\\models\\entity\\creeper.geo.json\" -t \"D:\\MCModTools\\MCModTools\\Vanilla\\VanillaResources\\textures\\entity\\creeper\\creeper.png\""
+    }
+  }
+}
