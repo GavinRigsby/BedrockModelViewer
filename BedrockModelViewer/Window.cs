@@ -30,46 +30,114 @@ namespace BedrockModelViewer
         private float zRot = 0f;
         private Camera camera;
         private bool focused = false;
-        private Model gameModel;
+        private ModelObject gameModel;
+        private ModelObject testModel;
 
+        //"origin": [ -4.0, 6.0, -2.0 ],
+        //"size": [ 8, 12, 4 ],
+        //"uv": [ 16, 16 ]
 
         private List<Vector3> vertices = new List<Vector3>()
         {
             // front face
-            new Vector3(-0.5f, 0.5f, 0.5f), // topleft vert
-            new Vector3(0.5f, 0.5f, 0.5f), // topright vert
-            new Vector3(0.5f, -0.5f, 0.5f), // bottomright vert
-            new Vector3(-0.5f, -0.5f, 0.5f), // bottomleft vert
+            new Vector3(-4f, 18f, 2f), // topleft vert
+            new Vector3(4f, 18f, 2f), // topright vert
+            new Vector3(4f, 6f, 2f), // bottomright vert
+            new Vector3(-4f, 6f, 2f), // bottomleft vert
             // right face
-            new Vector3(0.5f, 0.5f, 0.5f), // topleft vert
-            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
-            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
-            new Vector3(0.5f, -0.5f, 0.5f), // bottomleft vert
+            new Vector3(4f, 18f, 2f), // topleft vert
+            new Vector3(4f, 18f, -2f), // topright vert
+            new Vector3(4f, 6f, -2f), // bottomright vert
+            new Vector3(4f, 6f, 2f), // bottomleft vert
             // back face
-            new Vector3(0.5f, 0.5f, -0.5f), // topleft vert
-            new Vector3(-0.5f, 0.5f, -0.5f), // topright vert
-            new Vector3(-0.5f, -0.5f, -0.5f), // bottomright vert
-            new Vector3(0.5f, -0.5f, -0.5f), // bottomleft vert
+            new Vector3(4f, 18f, -2f), // topleft vert
+            new Vector3(-4f, 18f, -2f), // topright vert
+            new Vector3(-4f, 6f, -2f), // bottomright vert
+            new Vector3(4f, 6f, -2f), // bottomleft vert
             // left face
-            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
-            new Vector3(-0.5f, 0.5f, 0.5f), // topright vert
-            new Vector3(-0.5f, -0.5f, 0.5f), // bottomright vert
-            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
+            new Vector3(-4f, 18f, -2f), // topleft vert
+            new Vector3(-4f, 18f, 2f), // topright vert
+            new Vector3(-4f, 6f, 2f), // bottomright vert
+            new Vector3(-4f, 6f, -2f), // bottomleft vert
             // top face
-            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
-            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
-            new Vector3(0.5f, 0.5f, 0.5f), // bottomright vert
-            new Vector3(-0.5f, 0.5f, 0.5f), // bottomleft vert
+            new Vector3(-4f, 18f, -2f), // topleft vert
+            new Vector3(4f, 18f, -2f), // topright vert
+            new Vector3(4f, 18f, 2f), // bottomright vert
+            new Vector3(-4f, 18f, 2f), // bottomleft vert
             // bottom face
-            new Vector3(-0.5f, -0.5f, 0.5f), // topleft vert
-            new Vector3(0.5f, -0.5f, 0.5f), // topright vert
-            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
-            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
+            new Vector3(-4f, 6f, 2f), // topleft vert
+            new Vector3(4f, 6f, 2f), // topright vert
+            new Vector3(4f, 6f, -2f), // bottomright vert
+            new Vector3(-4f, 6f, -2f), // bottomleft vert
 
+            // FACE
+            // front
+            new Vector3(-4f, 26f, 4f),
+            new Vector3(4f, 26f, 4f),
+            new Vector3(4f, 18f, 4f),
+            new Vector3(-4f, 18f, 4f),
+
+            //right
+            new Vector3(4f, 26f, 4f),
+            new Vector3(4f, 26f, -4f),
+            new Vector3(4f, 18f, -4f),
+            new Vector3(4f, 18f, 4f),
+
+            new Vector3(4f, 26f, -4f),
+            new Vector3(-4f, 26f, -4f),
+            new Vector3(-4f, 18f, -4f),
+            new Vector3(4f, 18f, -4f),
+
+            new Vector3(-4f, 26f, -4f),
+            new Vector3(-4f, 26f, 4f),
+            new Vector3(-4f, 18f, 4f),
+            new Vector3(-4f, 18f, -4f),
+
+            new Vector3(-4f, 26f, -4f),
+            new Vector3(4f, 26f, -4f),
+            new Vector3(4f, 26f, 4f),
+            new Vector3(-4f, 26f, 4f),
+
+            new Vector3(-4f, 18f, 4f),
+            new Vector3(4f, 18f, 4f),
+            new Vector3(4f, 18f, -4f),
+            new Vector3(-4f, 18f, -4f),
         };
 
         List<Vector2> texCoords = new List<Vector2>()
         {
+            // =======  BODY =========
+            new Vector2(20/64f, 12/32f),
+            new Vector2(28/64f, 12/32f),
+            new Vector2(28/64f, 0/32f),
+            new Vector2(20/64f, 0/32f),
+
+            new Vector2(28/64f, 12/32f),
+            new Vector2(32/64f, 12/32f),
+            new Vector2(32/64f, 0/32f),
+            new Vector2(28/64f, 0/32f),
+
+            new Vector2(32/64f, 12/32f),
+            new Vector2(40/64f, 12/32f),
+            new Vector2(40/64f, 0/32f),
+            new Vector2(32/64f, 0/32f),
+
+            new Vector2(16/64f, 12/32f),
+            new Vector2(20/64f, 12/32f),
+            new Vector2(20/64f, 0/32f),
+            new Vector2(16/64f, 0/32f),
+
+            new Vector2(20/64f, 16/32f),
+            new Vector2(28/64f, 16/32f),
+            new Vector2(28/64f, 12/32f),
+            new Vector2(20/64f, 12/32f),
+
+            new Vector2(28/64f, 16/32f),
+            new Vector2(36/64f, 16/32f),
+            new Vector2(36/64f, 12/32f),
+            new Vector2(28/64f, 12/32f),
+
+            // =======  HEAD =========
             new Vector2(1/8f, 3/4f),
             new Vector2(2/8f, 3/4f),
             new Vector2(2/8f, 2/4f),
@@ -122,7 +190,26 @@ namespace BedrockModelViewer
             18, 19, 16,
 
             20, 21, 22,
-            22, 23, 20
+            22, 23, 20,
+
+            // HEAD
+            24, 25, 26,
+            26, 27, 24,
+
+            28, 29, 30, 
+            30, 31, 28,
+
+            32, 33, 34, 
+            34, 35, 32, 
+
+            36, 37, 38,
+            38, 39, 36, 
+
+            40, 41, 42,
+            42, 43, 40,
+
+            44, 45, 46,
+            46, 47, 44,
         };
 
 
@@ -136,13 +223,51 @@ namespace BedrockModelViewer
             height = Size.Y;
         }
 
+        private void CompareModels()
+        {
+            Debug.WriteLine("Verts:\n");
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                Debug.WriteLine($"Manual ({vertices[i].X},{vertices[i].Y},{vertices[i].Z}) \n Model ({gameModel.modelVerts[i].X},{gameModel.modelVerts[i].Y},{gameModel.modelVerts[i].Z})");
+            }
+
+            Debug.WriteLine("Indices:\n");
+            for (int i = 0; i < indices.Count; i++)
+            {
+                Debug.WriteLine($"Manual {indices[i]}  Model {gameModel.modelIndices[i]}");
+            }
+
+            List<string> faces = new List<string> { "FRONT", "BACK", "LEFT", "RIGHT", "TOP", "BOTTOM" };
+            int sidecount = 0;
+            //Debug.WriteLine("UV:\n");
+            Debug.WriteLine($"FRONT UV");
+            for (int i = 0; i < texCoords.Count; i++)
+            {
+                if ((i + 1) % 4 == 0)
+                {
+
+                    sidecount = (sidecount + 1) % 6;
+                    Debug.WriteLine($"{faces[sidecount]} UV");
+                }
+
+                Debug.WriteLine($"Manual ({texCoords[i].X},{texCoords[i].Y}) \n Model ({gameModel.modelUVs[i].X},{gameModel.modelUVs[i].Y})");
+            }
+        }
+
 
         // Loads in initial values 
         protected override void OnLoad()
         {
             base.OnLoad();
+            File.Copy(_texturePath, "Resources/texture.png", true);
 
-            gameModel = new Model(new Vector3(0f, 0f, 0f), _modelPath, _texturePath);
+
+            gameModel = new ModelObject(new Vector3(10f, 0f, 0f), _modelPath, _texturePath);
+
+           // testModel = new ModelObject(new Vector3(-10f, 0f, 0f), _modelPath, _texturePath);
+            //testModel.ManualData(vertices, texCoords, indices);
+
+            //CompareModels();
 
             // generate the vertex buffer object
             vertexArrayObject = new VAO();
@@ -160,7 +285,7 @@ namespace BedrockModelViewer
             shaderProgram = new ShaderProgram("default.vert", "default.frag");
 
             texture = new Texture("texture.png");
-                
+
             // Enable 3D
             GL.Enable(EnableCap.DepthTest);
 
@@ -204,10 +329,11 @@ namespace BedrockModelViewer
             GL.UniformMatrix4(viewLocation, true, ref view);
             GL.UniformMatrix4(projectionLocation, true, ref projection);
 
-            gameModel.Render(shaderProgram);
-
             GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
 
+            gameModel.Render(shaderProgram);
+
+            //testModel.Render(shaderProgram);
 
             SwapBuffers();
 

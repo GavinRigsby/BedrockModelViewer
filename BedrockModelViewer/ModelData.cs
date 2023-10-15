@@ -8,6 +8,7 @@ using OpenTK.Mathematics;
 using System.Reflection.Metadata.Ecma335;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
+using BedrockModelViewer.Objects;
 
 namespace BedrockModelViewer
 {
@@ -246,70 +247,76 @@ namespace BedrockModelViewer
         }
 
         
-        public void GenerateGeometry(Vector3 origin, Vector2 uv, Vector3 size, string TexturePath, out List<Vector3> positions, out List<Vector2> uvs)
+        public void GenerateGeometry(Cube cube, string TexturePath, out List<Vector3> positions, out List<Vector2> uvs)
         {
+
+
             //float scalar = 1 / 8f;
             //origin = RescaleVector(scalar, origin);
             //size = RescaleVector(scalar, size);
 
 
-            // The verticies (edges) of the cube
-            positions = new List<Vector3>(){
+            //// The verticies (edges) of the cube
+            //positions = new List<Vector3>(){
 
-                origin + new Vector3(0, size.Y, 0),             // front top left           
-                origin + new Vector3(size.X, size.Y, 0),        // front top right          
-                origin + new Vector3(size.X, 0, 0),             // front bottom right       
-                origin,                                         // front bottom left        
-                
-                origin + new Vector3(size.X, size.Y, 0),        // right top left           
-                origin + new Vector3(size.X, size.Y, -size.Z),  // right top right          
-                origin + new Vector3(size.X, 0, -size.Z),       // right bottom right
-                origin + new Vector3(size.X, 0, 0),             // right bottom left 
+            //    origin + new Vector3(0, size.Y, 0),             // front top left           
+            //    origin + new Vector3(size.X, size.Y, 0),        // front top right          
+            //    origin + new Vector3(size.X, 0, 0),             // front bottom right       
+            //    origin,                                         // front bottom left        
 
-                origin + new Vector3(size.X, size.Y, -size.Z),  // back top left            
-                origin + new Vector3(0, size.Y, -size.Z),       // back top right 
-                origin + new Vector3(0, 0, -size.Z),            // back bottom right 
-                origin + new Vector3(size.X, 0, -size.Z),       // back bottom left         
-                       
-                origin + new Vector3(0, size.Y, -size.Z),       // left top left            
-                origin + new Vector3(0, size.Y, 0),             // left top right           
-                origin,                                         // left bottom right
-                origin + new Vector3(0, 0, -size.Z),            // left bottom left         
-                        
-                origin + new Vector3(0, size.Y, -size.Z),       // top top left             
-                origin + new Vector3(size.X, size.Y, -size.Z),  // top top right          
-                origin + new Vector3(size.X, size.Y, 0),        // top bottom right
-                origin + new Vector3(0, size.Y, 0),             // top bottom left          
-                         
-                origin,                                         // bottom top left          
-                origin + new Vector3(size.X, 0, 0),             // bottom top right             
-                origin + new Vector3(size.X, 0, -size.Z),       // bottom bottom right 
-                origin + new Vector3(0, 0, -size.Z),            // bottom bottom left    
-            };
+            //    origin + new Vector3(size.X, size.Y, 0),        // right top left           
+            //    origin + new Vector3(size.X, size.Y, -size.Z),  // right top right          
+            //    origin + new Vector3(size.X, 0, -size.Z),       // right bottom right
+            //    origin + new Vector3(size.X, 0, 0),             // right bottom left 
 
-            //Debug.WriteLine($"Creating Box of size {size.X}x{size.Y}x{size.Z} at {origin.X},{origin.Y},{origin.Z}");
+            //    origin + new Vector3(size.X, size.Y, -size.Z),  // back top left            
+            //    origin + new Vector3(0, size.Y, -size.Z),       // back top right 
+            //    origin + new Vector3(0, 0, -size.Z),            // back bottom right 
+            //    origin + new Vector3(size.X, 0, -size.Z),       // back bottom left         
 
-            // CCW
-            List<uint> indices = new List<uint>
-            {
-                0,  1,  2,          // front bottom triangle
-                1,  3,  2,          // front top triangle
+            //    origin + new Vector3(0, size.Y, -size.Z),       // left top left            
+            //    origin + new Vector3(0, size.Y, 0),             // left top right           
+            //    origin,                                         // left bottom right
+            //    origin + new Vector3(0, 0, -size.Z),            // left bottom left         
 
-                4,  5,  6,          // back bottom triangle
-                5,  7,  6,          // back top triangle
+            //    origin + new Vector3(0, size.Y, -size.Z),       // top top left             
+            //    origin + new Vector3(size.X, size.Y, -size.Z),  // top top right          
+            //    origin + new Vector3(size.X, size.Y, 0),        // top bottom right
+            //    origin + new Vector3(0, size.Y, 0),             // top bottom left          
 
-                8,  9,  10,         // left bottom triangle
-                9, 11,  10,         // left top triangle
+            //    origin,                                         // bottom top left          
+            //    origin + new Vector3(size.X, 0, 0),             // bottom top right             
+            //    origin + new Vector3(size.X, 0, -size.Z),       // bottom bottom right 
+            //    origin + new Vector3(0, 0, -size.Z),            // bottom bottom left    
+            //};
 
-                12, 13, 14,         // right bottom triangle
-                13, 15, 14,         // right top triangle 
+            ////Debug.WriteLine($"Creating Box of size {size.X}x{size.Y}x{size.Z} at {origin.X},{origin.Y},{origin.Z}");
 
-                16, 17, 18,         // top bottom triangle
-                17, 19, 18,         // top top triangle
+            //// CCW
+            //List<uint> indices = new List<uint>
+            //{
+            //    0,  1,  2,          // front bottom triangle
+            //    1,  3,  2,          // front top triangle
 
-                20, 21, 22,         // bottom bottom triangle
-                21, 23, 22,         // bottom top triangle
-            };
+            //    4,  5,  6,          // back bottom triangle
+            //    5,  7,  6,          // back top triangle
+
+            //    8,  9,  10,         // left bottom triangle
+            //    9, 11,  10,         // left top triangle
+
+            //    12, 13, 14,         // right bottom triangle
+            //    13, 15, 14,         // right top triangle 
+
+            //    16, 17, 18,         // top bottom triangle
+            //    17, 19, 18,         // top top triangle
+
+            //    20, 21, 22,         // bottom bottom triangle
+            //    21, 23, 22,         // bottom top triangle
+            //};
+
+            Vector3 origin = cube.origin;
+            Vector3 size = cube.size;
+            Vector2 uv = cube.uv;
 
             int width = 0;
             int height = 0;
@@ -320,7 +327,10 @@ namespace BedrockModelViewer
                 height = img.Height;
             }
 
-            uvs = GetUVCoordinates(uv, RescaleVector(8f, size), width, height);
+            RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
+
+            uvs = prism.UVs;
+            positions = prism.Vertices;
         }
 
         public ModelInfo model { get; set; } = new ModelInfo();
@@ -343,9 +353,24 @@ namespace BedrockModelViewer
                         List<Vector2> cubeUVs;
                         List<int> cubeIndices;
 
-                        GenerateGeometry(cube.origin, cube.uv, cube.size, texturePath, out cubePositions, out cubeUVs);
+                        Vector3 origin = cube.origin;
+                        Vector3 size = cube.size;
+                        Vector2 uv = cube.uv;
 
-                        model.AddInfo(cubePositions, cubeUVs);
+                        int width = 0;
+                        int height = 0;
+
+                        using (Image img = Image.FromFile(texturePath))
+                        {
+                            width = img.Width;
+                            height = img.Height;
+                        }
+
+                        RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
+                        model.AddInfo(prism.Vertices, prism.UVs, prism.Indicies);
+
+                        //GenerateGeometry(cube, texturePath, out cubePositions, out cubeUVs);
+
                     }
                 }
             }
@@ -359,26 +384,24 @@ namespace BedrockModelViewer
         public List<uint> Indices { get; set; } = new List<uint>();
         private uint indexCount = 0;
 
-        public void AddInfo(List<Vector3> vertices, List<Vector2> uvs)
+        public void AddInfo(List<Vector3> vertices, List<Vector2> uvs, List<uint> indicies)
         {
-            Vertices.AddRange(vertices);
-            UVs.AddRange(uvs);
-
-            AddIndices(vertices.Count / 4);
+                Vertices.AddRange(vertices);
+                UVs.AddRange(uvs);
+                AddIndices(indicies);
         }
 
-        private void AddIndices(int numFaces)
+        private void AddIndices(List<uint> indicies)
         {
-            for (int i = 0; i < numFaces; i++)
+            uint max = 0;
+            if (Indices.Count > 0)
             {
-                Indices.Add(0 + indexCount);
-                Indices.Add(3 + indexCount);
-                Indices.Add(2 + indexCount);
-                Indices.Add(2 + indexCount);
-                Indices.Add(1 + indexCount);
-                Indices.Add(0 + indexCount);
+                 max = Indices.Max() + 1;
+            }
 
-                indexCount += 4;
+             foreach (uint i in indicies)
+            {
+                Indices.Add(i + max);
             }
         }
     }

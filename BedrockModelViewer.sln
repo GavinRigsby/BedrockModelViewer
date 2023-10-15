@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedrockModelViewer", "BedrockModelViewer\BedrockModelViewer.csproj", "{29E3E7C0-93D3-4D18-95D2-9586B5EC5F1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BedrockModelViewer", "BedrockModelViewer\BedrockModelViewer.csproj", "{29E3E7C0-93D3-4D18-95D2-9586B5EC5F1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelViewer.Test", "ModelViewer.Test\ModelViewer.Test.csproj", "{47C7972B-B5D3-418F-86FE-008894821535}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{29E3E7C0-93D3-4D18-95D2-9586B5EC5F1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29E3E7C0-93D3-4D18-95D2-9586B5EC5F1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29E3E7C0-93D3-4D18-95D2-9586B5EC5F1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47C7972B-B5D3-418F-86FE-008894821535}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47C7972B-B5D3-418F-86FE-008894821535}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47C7972B-B5D3-418F-86FE-008894821535}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47C7972B-B5D3-418F-86FE-008894821535}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
