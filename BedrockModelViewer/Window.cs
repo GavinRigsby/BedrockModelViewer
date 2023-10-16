@@ -223,38 +223,6 @@ namespace BedrockModelViewer
             height = Size.Y;
         }
 
-        private void CompareModels()
-        {
-            Debug.WriteLine("Verts:\n");
-            for (int i = 0; i < vertices.Count; i++)
-            {
-                Debug.WriteLine($"Manual ({vertices[i].X},{vertices[i].Y},{vertices[i].Z}) \n Model ({gameModel.modelVerts[i].X},{gameModel.modelVerts[i].Y},{gameModel.modelVerts[i].Z})");
-            }
-
-            Debug.WriteLine("Indices:\n");
-            for (int i = 0; i < indices.Count; i++)
-            {
-                Debug.WriteLine($"Manual {indices[i]}  Model {gameModel.modelIndices[i]}");
-            }
-
-            List<string> faces = new List<string> { "FRONT", "BACK", "LEFT", "RIGHT", "TOP", "BOTTOM" };
-            int sidecount = 0;
-            //Debug.WriteLine("UV:\n");
-            Debug.WriteLine($"FRONT UV");
-            for (int i = 0; i < texCoords.Count; i++)
-            {
-                if ((i + 1) % 4 == 0)
-                {
-
-                    sidecount = (sidecount + 1) % 6;
-                    Debug.WriteLine($"{faces[sidecount]} UV");
-                }
-
-                Debug.WriteLine($"Manual ({texCoords[i].X},{texCoords[i].Y}) \n Model ({gameModel.modelUVs[i].X},{gameModel.modelUVs[i].Y})");
-            }
-        }
-
-
         // Loads in initial values 
         protected override void OnLoad()
         {
@@ -264,27 +232,23 @@ namespace BedrockModelViewer
 
             gameModel = new ModelObject(new Vector3(10f, 0f, 0f), _modelPath, _texturePath);
 
-           // testModel = new ModelObject(new Vector3(-10f, 0f, 0f), _modelPath, _texturePath);
-            //testModel.ManualData(vertices, texCoords, indices);
+            //testModel = new ModelObject(new Vector3(-10,0,0), _modelPath, _texturePath);
+            //// generate the vertex buffer object
+            //vertexArrayObject = new VAO();
 
-            //CompareModels();
+            ////// generate a buffer
+            //vertexBufferObject = new VBO(vertices);
 
-            // generate the vertex buffer object
-            vertexArrayObject = new VAO();
+            //vertexArrayObject.LinkToVAO(0, 3, vertexBufferObject);
 
-            // generate a buffer
-            vertexBufferObject = new VBO(vertices);
+            //textureVBO = new VBO(texCoords);
+            //vertexArrayObject.LinkToVAO(1, 2, textureVBO);
 
-            vertexArrayObject.LinkToVAO(0, 3, vertexBufferObject);
-
-            textureVBO = new VBO(texCoords);
-            vertexArrayObject.LinkToVAO(1, 2, textureVBO);
-
-            elementBufferObject = new IBO(indices);
+            //elementBufferObject = new IBO(indices);
 
             shaderProgram = new ShaderProgram("default.vert", "default.frag");
 
-            texture = new Texture("texture.png");
+            //texture = new Texture("texture.png");
 
             // Enable 3D
             GL.Enable(EnableCap.DepthTest);
@@ -307,16 +271,11 @@ namespace BedrockModelViewer
             GL.ClearColor(_backColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            shaderProgram.Bind();
-            vertexArrayObject.Bind();
-            elementBufferObject.Bind();
-            texture.Bind();
+            
 
             Matrix4 model = Matrix4.Identity;
             Matrix4 view = camera.GetViewMatrix();
             Matrix4 projection = camera.GetProjectionMatrix();
-
-
             Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -10f);
 
             model *= translation;
@@ -329,10 +288,17 @@ namespace BedrockModelViewer
             GL.UniformMatrix4(viewLocation, true, ref view);
             GL.UniformMatrix4(projectionLocation, true, ref projection);
 
-            GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
+            shaderProgram.Bind();
+            //vertexArrayObject.Bind();
+            //elementBufferObject.Bind();
+            //texture.Bind();
+            //GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
+
+
 
             gameModel.Render(shaderProgram);
 
+            
             //testModel.Render(shaderProgram);
 
             SwapBuffers();
@@ -345,10 +311,7 @@ namespace BedrockModelViewer
         protected override void OnUnload()
         {
             base.OnUnload();
-
-            vertexArrayObject.Delete();
-            elementBufferObject.Delete();
-            texture.Delete();
+            gameModel.Delete();
             shaderProgram.Delete();
         }
 

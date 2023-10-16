@@ -9,9 +9,8 @@ using System.Threading.Tasks;
 
 namespace BedrockModelViewer.Objects
 {
-    public class RectangularPrism
+    public class RectangularPrism : RenderableObject
     {
-
         public enum Faces
         {
             FRONT,
@@ -207,37 +206,28 @@ namespace BedrockModelViewer.Objects
             }
         }
 
-        public List<Vector3> Vertices { get; private set; }
-
-        public List<Vector2> UVs { get; private set; }
-
-        public List<uint> Indicies { get; private set; } = new List<uint>();
-
-
         public Vector3 Origin { get; set; }
         public Vector3 Size { get; set; }
         public Vector2 TextureSize { get; set; }
         public Vector2 TextureOrigin { get; set; }
 
-
         public void AddIndices()
         {
-            Indicies.Clear();
+            Indices.Clear();
             uint indexCount = 0;
             for (int i = 0; i < 6; i++)
             {
-                Indicies.Add(0 + indexCount);
-                Indicies.Add(1 + indexCount);
-                Indicies.Add(2 + indexCount);
-                Indicies.Add(2 + indexCount);
-                Indicies.Add(3 + indexCount);
-                Indicies.Add(0 + indexCount);
-
+                Indices.Add(0 + indexCount);
+                Indices.Add(1 + indexCount);
+                Indices.Add(2 + indexCount);
+                Indices.Add(2 + indexCount);
+                Indices.Add(3 + indexCount);
+                Indices.Add(0 + indexCount);
                 indexCount += 4;
             }
         }
 
-        public RectangularPrism(Vector3 origin, Vector3 size, Vector2 textureSize, Vector2 textureOrigin)
+        public RectangularPrism(Vector3 origin, Vector3 size, Vector2 textureSize, Vector2 textureOrigin): base (origin)
         {
             this.Origin = origin;
             this.Size = size;
@@ -247,7 +237,7 @@ namespace BedrockModelViewer.Objects
             GenerateModel();
         }
 
-        public void GenerateModel()
+        public override void GenerateModel()
         {
             UVData data = new(TextureOrigin, Size, TextureSize);
             VertData vertData = new VertData(Size, Origin);

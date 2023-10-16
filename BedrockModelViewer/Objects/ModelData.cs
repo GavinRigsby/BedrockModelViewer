@@ -27,6 +27,9 @@ namespace BedrockModelViewer
             [JsonConverter(typeof(Vector2Converter))]
             public Vector2 uv { get; set; }
 
+            [JsonProperty(PropertyName = "inflate")]
+            public float inflate { get; set; }
+
         }
 
         public class Bone
@@ -79,6 +82,19 @@ namespace BedrockModelViewer
                     if (property.Name.StartsWith("geometry.", StringComparison.OrdinalIgnoreCase))
                     {
                         matchingGeometryTokens.Add(property.Value);
+                    }
+                    else if (property.Name.StartsWith("minecraft:geometry"))
+                    {
+                        if (property.Value.Type == JTokenType.Array)
+                        {
+                            matchingGeometryTokens.Add(property.Value[0]);
+                        }
+                        else
+                        {
+                            matchingGeometryTokens.Add(property.Value);
+                        }
+
+                        
                     }
                 }
 
@@ -347,30 +363,37 @@ namespace BedrockModelViewer
                 // Process the cubes and create vertices and indices
                 foreach (Bone bone in geometry.bones)
                 {
-                    foreach (Cube cube in bone.cubes)
+                    if (bone != null && bone.cubes != null)
                     {
-                        List<Vector3> cubePositions;
-                        List<Vector2> cubeUVs;
-                        List<int> cubeIndices;
-
-                        Vector3 origin = cube.origin;
-                        Vector3 size = cube.size;
-                        Vector2 uv = cube.uv;
-
-                        int width = 0;
-                        int height = 0;
-
-                        using (Image img = Image.FromFile(texturePath))
+                        foreach (Cube cube in bone.cubes)
                         {
-                            width = img.Width;
-                            height = img.Height;
+                            List<Vector3> cubePositions;
+                            List<Vector2> cubeUVs;
+                            List<int> cubeIndices;
+
+                            Vector3 origin = cube.origin;
+                            Vector3 size = cube.size;
+                            Vector2 uv = cube.uv;
+                            float inflate = cube.inflate;
+
+                            int width = 0;
+                            int height = 0;
+
+                            using (Image img = Image.FromFile(texturePath))
+                            {
+                                width = img.Width;
+                                height = img.Height;
+                            }
+
+                            RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
+
+                            if (inflate != null)
+                            {
+                                prism.Inflate(inflate);
+                            }
+
+                            model.AddInfo(prism.Vertices, prism.UVs, prism.Indices);
                         }
-
-                        RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
-                        model.AddInfo(prism.Vertices, prism.UVs, prism.Indicies);
-
-                        //GenerateGeometry(cube, texturePath, out cubePositions, out cubeUVs);
-
                     }
                 }
             }
@@ -382,7 +405,6 @@ namespace BedrockModelViewer
         public List<Vector3> Vertices { get; set; } = new List<Vector3>();
         public List<Vector2> UVs { get; set; } = new List<Vector2>();
         public List<uint> Indices { get; set; } = new List<uint>();
-        private uint indexCount = 0;
 
         public void AddInfo(List<Vector3> vertices, List<Vector2> uvs, List<uint> indicies)
         {

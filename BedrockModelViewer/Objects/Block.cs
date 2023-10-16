@@ -12,12 +12,13 @@ namespace BedrockModelViewer.Objects
         public Vector3 position;
 
         public List<Vector2> fullUV = new List<Vector2>
-            {
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(1f, 0f),
-                new Vector2(0f, 0f),
-            };
+        {
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+        };
+
         public Block(Vector3 position) : base(position, new Vector3(1f, 1f, 1f), new Vector2(), new Vector2())
         {
 

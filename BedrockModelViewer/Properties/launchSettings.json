@@ -2,7 +2,7 @@
   "profiles": {
     "BedrockModelViewer": {
       "commandName": "Project",
-      "commandLineArgs": "-m \"../../../ExampleFiles/creeper.geo.json\" -t \"../../../ExampleFiles/creeper.png\""
+      "commandLineArgs": "-m \"C:\\Users\\Gavin\\Downloads\\bedrock-samples-1.20.50.20-preview\\resource_pack\\models\\entity\\warden.geo.json\" -t \"C:\\Users\\Gavin\\Downloads\\bedrock-samples-1.20.50.20-preview\\resource_pack\\textures\\entity\\warden\\warden.png\""
     }
   }
 }

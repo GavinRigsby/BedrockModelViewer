@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BedrockModelViewer.Graphics
 {
-    internal class Texture
+    public class Texture
     {
         public int ID;
 

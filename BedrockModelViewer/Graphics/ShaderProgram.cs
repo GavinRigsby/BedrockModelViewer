@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BedrockModelViewer.Graphics
 {
-    internal class ShaderProgram
+    public class ShaderProgram
     {
         public int ID;
         public ShaderProgram(string vertexShaderFilepath, string fragmentShaderFilepath)

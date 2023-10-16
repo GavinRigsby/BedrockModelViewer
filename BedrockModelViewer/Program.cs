@@ -81,8 +81,6 @@ namespace BedrockModelViewer
             string? output = null;
             HandleArgs(args, out texture, out model, out output);
 
-
-
             var nativeWindowSettings = new NativeWindowSettings()
             {
                 Size = new Vector2i(500, 500),
