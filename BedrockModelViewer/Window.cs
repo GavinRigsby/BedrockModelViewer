@@ -7,6 +7,9 @@ using StbImageSharp;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using BedrockModelViewer.Graphics;
 using OpenTK.Compute.OpenCL;
+using BedrockModelViewer.Objects;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace BedrockModelViewer
 {
@@ -21,7 +24,7 @@ namespace BedrockModelViewer
         private VBO vertexBufferObject;
         private VAO vertexArrayObject;
         private IBO elementBufferObject;
-        private Texture texture;
+        private RenderTools texture;
         private VBO textureVBO;
         private int width;
         private int height;
@@ -31,7 +34,8 @@ namespace BedrockModelViewer
         private Camera camera;
         private bool focused = false;
         private ModelObject gameModel;
-        private ModelObject testModel;
+        private Stair testStair;
+        private Block testBlock;
 
         //"origin": [ -4.0, 6.0, -2.0 ],
         //"size": [ 8, 12, 4 ],
@@ -212,7 +216,88 @@ namespace BedrockModelViewer
             46, 47, 44,
         };
 
+        private Bitmap ExportImage()
+        {
 
+            Bitmap bmp = new Bitmap(this.ClientSize.X, this.ClientSize.Y);
+
+            // Create a data buffer to read the OpenGL framebuffer into
+            byte[] data = new byte[4 * width * height];
+
+            // Read the framebuffer
+            GL.ReadPixels(0, 0, width, height, OpenTK.Graphics.OpenGL4.PixelFormat.Bgra, PixelType.UnsignedByte, data);
+
+            // Lock the bits of the bitmap
+            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            // Copy the data into the bitmap
+            System.Runtime.InteropServices.Marshal.Copy(data, 0, bmpData.Scan0, data.Length);
+
+            // Unlock the bitmap
+            bmp.UnlockBits(bmpData);
+
+            // Flip the image vertically if needed
+            bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+
+            return bmp;
+        }
+
+        private List<Bitmap> ScreenShotImages = new();
+        private Color4 secondaryColor = Color4.LimeGreen;
+
+        public void SaveModelImage()
+        {
+            Bitmap Image = ExportImage();
+            ScreenShotImages.Add(Image);
+            Color4 tmp = _backColor;
+            _backColor = secondaryColor;
+            secondaryColor = tmp;
+
+            if (ScreenShotImages.Count == 2)
+            {
+                Bitmap result = RemoveBackground(ScreenShotImages[0], ScreenShotImages[1]);
+                string output = _imageOutput == null ? "result.png" : _imageOutput;
+                result.Save(output);
+                if (_imageOutput != null)
+                {
+                    Environment.Exit(0);
+                }
+            }
+            //Image.Save("myfile.png", System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private Bitmap RemoveBackground(Bitmap first, Bitmap second)
+        {
+            // Create a new bitmap for the output
+            Bitmap outputImage = new Bitmap(first.Width, first.Height);
+
+            for (int x = 0; x < first.Width; x++)
+            {
+                for (int y = 0; y < first.Height; y++)
+                {
+                    Color pixel1 = first.GetPixel(x, y);
+                    Color pixel2 = second.GetPixel(x, y);
+
+                    if (pixel1 == _backColor && pixel2 == secondaryColor)
+                    {
+                        outputImage.SetPixel(x, y, Color.Transparent);
+                    }
+                    else
+                    {
+                        outputImage.SetPixel(x, y, pixel2);
+                    }
+                }
+            }
+
+            // Save the modified image
+            
+
+            // Clean up resources
+            first.Dispose();
+            second.Dispose();
+
+            return outputImage;
+        }
 
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings, string Texture, string Model, string output) : base(gameWindowSettings, nativeWindowSettings)
         {
@@ -227,33 +312,20 @@ namespace BedrockModelViewer
         protected override void OnLoad()
         {
             base.OnLoad();
+            Directory.CreateDirectory("Resources");
             File.Copy(_texturePath, "Resources/texture.png", true);
-
-
-            gameModel = new ModelObject(new Vector3(10f, 0f, 0f), _modelPath, _texturePath);
-
-            //testModel = new ModelObject(new Vector3(-10,0,0), _modelPath, _texturePath);
-            //// generate the vertex buffer object
-            //vertexArrayObject = new VAO();
-
-            ////// generate a buffer
-            //vertexBufferObject = new VBO(vertices);
-
-            //vertexArrayObject.LinkToVAO(0, 3, vertexBufferObject);
-
-            //textureVBO = new VBO(texCoords);
-            //vertexArrayObject.LinkToVAO(1, 2, textureVBO);
-
-            //elementBufferObject = new IBO(indices);
-
+            gameModel = new ModelObject(new Vector3(0f, 0f, 0f), _modelPath, _texturePath);
             shaderProgram = new ShaderProgram("default.vert", "default.frag");
 
-            //texture = new Texture("texture.png");
+            testBlock = new Block(new Vector3(0, 0, 0), "../../../ExampleFiles/dirt.png");
 
             // Enable 3D
             GL.Enable(EnableCap.DepthTest);
 
             camera = new Camera(width, height, Vector3.Zero);
+            camera.RotateAroundObject(gameModel, 55f);
+
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -262,23 +334,23 @@ namespace BedrockModelViewer
             GL.Viewport(0,0, e.Width, e.Height);
             this.width = e.Width;
             this.height = e.Height;
+            camera.Resized(width, height);
         }
 
+        private int RenderCount = 0;
+        private float rotation = 0.0f;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-
             // Clear the Color and Depth Buffers
             GL.ClearColor(_backColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            
+            //rotation += 0.0005f % 360;
+            //camera.RotateAroundObject(gameModel, rotation);
 
             Matrix4 model = Matrix4.Identity;
             Matrix4 view = camera.GetViewMatrix();
             Matrix4 projection = camera.GetProjectionMatrix();
-            Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -10f);
-
-            model *= translation;
 
             int modelLocation = GL.GetUniformLocation(shaderProgram.ID, "model");
             int viewLocation = GL.GetUniformLocation(shaderProgram.ID, "view");
@@ -294,17 +366,26 @@ namespace BedrockModelViewer
             //texture.Bind();
             //GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
 
-
-
             gameModel.Render(shaderProgram);
-
-            
+            //testStair.Render(shaderProgram);
+            //testBlock.Render(shaderProgram);
             //testModel.Render(shaderProgram);
 
             SwapBuffers();
-
             base.OnRenderFrame(e);
-
+            if (RenderCount > 10)
+            {
+                if (ScreenShotImages.Count < 2)
+                {
+                    Debug.WriteLine("Screenshot");
+                    SaveModelImage();
+                    RenderCount = 0;
+                }
+            }
+            else
+            {
+                RenderCount++;
+            }
         }
 
         // Cleanup when closing

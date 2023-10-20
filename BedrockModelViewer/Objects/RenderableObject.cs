@@ -1,6 +1,7 @@
 ﻿using BedrockModelViewer.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using System.Diagnostics;
 
 namespace BedrockModelViewer.Objects
 {
@@ -10,7 +11,7 @@ namespace BedrockModelViewer.Objects
         public string textureName = "MissingTexture.png";
         public Vector3 position = new(0,0,0);
         public List<Vector3> Vertices = new();
-        private List<Vector3> PostitionedVertices;
+        public List<Vector3> CenteredVertices { get; private set; } = new();
         public List<Vector2> UVs = new();
         public List<uint> Indices = new();
         private Texture texture { get; set; }
@@ -23,7 +24,7 @@ namespace BedrockModelViewer.Objects
         public virtual void GenerateModel()
         {
         }
-
+        
         public RenderableObject() { }
 
         public RenderableObject(Vector3 position)
@@ -39,7 +40,7 @@ namespace BedrockModelViewer.Objects
         }
         
         // Positions the model based on currently set postion
-        public void SetPostion()
+        public void SetPosition()
         {
             SetPosition(this.position);
         }
@@ -47,36 +48,52 @@ namespace BedrockModelViewer.Objects
         // Postitions the model based on supplied position
         public void SetPosition(Vector3 position)
         {
-            List<Vector3> newVerts = new List<Vector3>();
-            foreach (Vector3 v in Vertices)
+            if (CenteredVertices.Count > 0)
             {
-                Vector3 newVert = new Vector3(
-                    v.X + position.X,
-                    v.Y + position.Y,
-                    v.Z + position.Z);
-                newVerts.Add(newVert);
+                this.Vertices = RenderTools.PostitionModel(position, CenteredVertices);
+                this.position = position;
+                BuildModel();
             }
-            this.PostitionedVertices = newVerts;
-            this.position = position;
-            BuildModel();
+            //List<Vector3> newVerts = new List<Vector3>();
+            //foreach (Vector3 v in Vertices)
+            //{
+            //    Vector3 newVert = new Vector3(
+            //        v.X + position.X,
+            //        v.Y + position.Y,
+            //        v.Z + position.Z);
+            //    newVerts.Add(newVert);
+            //}
+            //this.PostitionedVertices = newVerts;
+            //this.position = position;
+            //BuildModel();
         }
 
         // Builds the objects to render the model
         public void BuildModel()
         {
+            if (UVs.Count != Vertices.Count)
+            {
+                Debug.WriteLine("We Got Issues");
+            }
+
             VAO = new VAO();
 
             List<Vector3> renderVerts = Vertices;
-            if (PostitionedVertices != null)
-            {
-                renderVerts = PostitionedVertices;
-            }
             VertexVBO = new VBO(renderVerts);
             VAO.LinkToVAO(0, 3, VertexVBO);
             TextureVBO = new VBO(UVs);
             VAO.LinkToVAO(1, 2, TextureVBO);
             IBO = new IBO(Indices);
             texture = new Texture(textureName);
+        }
+
+        public void OffsetModel(Vector3 offset)
+        {
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                Vertices[i] = Vertices[i] + offset;
+            }
+            // May need to update position
         }
 
         // Remove all data (cleanup)
@@ -91,10 +108,10 @@ namespace BedrockModelViewer.Objects
         // Allows user to manually supply Vertices, UVs, and Indices for model
         public void SetData(List<Vector3> Vectors, List<Vector2> UVs, List<uint> Indicies)
         {
-            this.Vertices = Vectors;
+            this.CenteredVertices = Vectors;
             this.UVs = UVs;
             this.Indices = Indicies;
-            SetPosition(position);
+            SetPosition();
         }
 
         // Renders the modle to the screen
@@ -104,6 +121,7 @@ namespace BedrockModelViewer.Objects
             VAO.Bind();
             IBO.Bind();
             texture.Bind();
+
             GL.DrawElements(PrimitiveType.Triangles, Indices.Count, DrawElementsType.UnsignedInt, 0);
         }
 

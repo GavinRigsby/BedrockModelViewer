@@ -8,12 +8,78 @@ using OpenTK.Mathematics;
 using System.Reflection.Metadata.Ecma335;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
-using BedrockModelViewer.Objects;
+using BedrockModelViewer.Graphics;
+using OpenTK.Graphics.GL;
+using static BedrockModelViewer.Objects.ModelData;
+using System.Data;
 
-namespace BedrockModelViewer
+namespace BedrockModelViewer.Objects
 {
-    class ModelData
+    public class ModelData
     {
+        public class CustomUV
+        {
+            public class UVDATA
+            {
+                [JsonProperty(PropertyName = "uv")]
+                [JsonConverter(typeof(Vector2Converter))]
+                public Vector2 uv { get; set; }
+
+                [JsonProperty(PropertyName = "uv_size")]
+                [JsonConverter(typeof(Vector2Converter))]
+                public Vector2 uvSize { get; set; }
+            }
+
+            [JsonProperty(PropertyName = "north")]
+            public UVDATA north { get; set; }
+
+            [JsonProperty(PropertyName = "east")]
+            public UVDATA east { get; set; }
+
+            [JsonProperty(PropertyName = "south")]
+            public UVDATA south { get; set; }
+
+            [JsonProperty(PropertyName = "west")]
+            public UVDATA west { get; set; }
+
+            [JsonProperty(PropertyName = "up")]
+            public UVDATA up { get; set; }
+
+            [JsonProperty(PropertyName = "down")]
+            public UVDATA down { get; set; }
+        }
+
+        public class UVConverter : JsonConverter
+        {
+            public override bool CanConvert(Type objectType)
+            {
+                // Specify the type(s) that this converter can handle.
+                return true;
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                JToken jsonObject = JToken.Load(reader);
+
+                if (jsonObject.Type == JTokenType.Array)
+                {
+                    float[] array = jsonObject.ToObject<float[]>();
+                    return new Vector2(array[0], array[1]);
+                }
+                else if (jsonObject.Type == JTokenType.Object)
+                {
+                    CustomUV custom = jsonObject.ToObject<CustomUV>();
+                    return custom;
+                }
+                return null;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Implement if you need custom serialization logic (optional).
+            }
+        }
+
         public class Cube
         {
             [JsonProperty(PropertyName = "origin")]
@@ -24,12 +90,23 @@ namespace BedrockModelViewer
             public Vector3 size { get; set; } = new Vector3(8, 8, 8);
             [JsonProperty(PropertyName = "uv")]
 
-            [JsonConverter(typeof(Vector2Converter))]
-            public Vector2 uv { get; set; }
+            [JsonConverter(typeof(UVConverter))]
+            public object uv { get; set; }
 
             [JsonProperty(PropertyName = "inflate")]
             public float inflate { get; set; }
 
+            [JsonProperty(PropertyName = "pivot")]
+            [JsonConverter(typeof(Vector3Converter))]
+            public Vector3 pivot { get; set; }
+
+            [JsonProperty(PropertyName = "rotation")]
+            [JsonConverter(typeof(Vector3Converter))]
+            public Vector3 rotation { get; set; }
+
+
+            [JsonProperty(PropertyName = "mirror")]
+            public bool mirror { get; set; }
         }
 
         public class Bone
@@ -46,9 +123,84 @@ namespace BedrockModelViewer
             [JsonProperty(PropertyName = "parent")]
             public string parent { get; set; }
 
+            [JsonProperty(PropertyName = "mirror")]
+            public bool mirror { get; set; }
+
             [JsonProperty(PropertyName = "pivot")]
             [JsonConverter(typeof(Vector3Converter))]
             public Vector3 pivot { get; set; }
+
+            [JsonProperty(PropertyName = "rotation")]
+            [JsonConverter(typeof(Vector3Converter))]
+            public Vector3 rotation { get; set; }
+
+            public List<Bone> children = new();
+
+            public List<RectangularPrism> rectangles = new();
+
+            public void Rotate()
+            {
+                Rotate(rotation, pivot);
+            }
+
+            public void Rotate(Vector3 rotation, Vector3 pivot)
+            {
+                if (rotation != (0, 0, 0))
+                {
+                    // Rotate all boxes
+                    foreach (RectangularPrism child in rectangles)
+                    {
+                        child.Rotate(rotation, pivot);
+                    }
+                }
+            }
+
+            public void RotateChildren(Vector3 rotation, Vector3 pivot)
+            {
+                if (rotation != (0, 0, 0))
+                {
+                    // First, apply the parent's rotation to the current bone
+                    Rotate(rotation, pivot);
+
+                    // Then, recursively apply the rotation to all child bones
+                    foreach (Bone child in children)
+                    {
+                        // Recursively rotate the child bone and its hierarchy
+                        child.RotateChildren(rotation, pivot);
+                    }
+                }
+            }
+
+            public void TranslateVerts(Vector3 offset)
+            {
+                foreach (RectangularPrism prism in rectangles)
+                {
+                    prism.OffsetModel(offset);
+                }
+            }
+
+
+            private Vector3 TransformRelativePivot(Vector3 parentPivot, Vector3 relativePivot, Vector3 rotation)
+            {
+                float xRotInRadians = MathHelper.DegreesToRadians(rotation.X);
+                float yRotInRadians = -MathHelper.DegreesToRadians(rotation.Y);
+                float zRotInRadians = -MathHelper.DegreesToRadians(rotation.Z);
+
+                Quaternion xRotation = Quaternion.FromAxisAngle(Vector3.UnitX, xRotInRadians);
+                Quaternion yRotation = Quaternion.FromAxisAngle(Vector3.UnitY, yRotInRadians);
+                Quaternion zRotation = Quaternion.FromAxisAngle(Vector3.UnitZ, zRotInRadians);
+
+                Vector3 translatedPivot = (relativePivot * (1,1,-1)) - (parentPivot * (1, 1, -1));
+
+                // Apply the rotations in the order: x, y, z
+                Vector3 rotatedPivot = Vector3.Transform(Vector3.Transform(Vector3.Transform(translatedPivot, xRotation), yRotation), zRotation);
+
+                rotatedPivot += (parentPivot * (1, 1, -1));
+
+                rotatedPivot = rotatedPivot * (1, 1, -1);
+
+                return rotatedPivot;
+            }
         }
 
         public class Geometry
@@ -94,7 +246,7 @@ namespace BedrockModelViewer
                             matchingGeometryTokens.Add(property.Value);
                         }
 
-                        
+
                     }
                 }
 
@@ -177,178 +329,6 @@ namespace BedrockModelViewer
             public Geometry[] minecraftgeometry { get; set; }
         }
 
-        public List<Vector2> Normalize(List<Vector2> vectors, int textureWidth, int textureHeight)
-        {
-            float hTexel = 1f / textureHeight;
-            float wTexel = 1f / textureWidth;
-            List<Vector2> result = new List<Vector2>();
-            foreach (Vector2 vector in vectors)
-            {
-                result.Add(new Vector2(vector.X * hTexel, 1 - (vector.Y * wTexel)));
-            }
-            return result;
-        }
-
-        public List<Vector2> GetUVCoordinates(Vector2 origin, Vector3 size, int textureWidth, int textureHeight)
-        {
-
-
-            List<Vector2> allSides = new List<Vector2> { };
-
-
-            // front
-            Vector2 topLeft = new Vector2(origin.X + size.Z, origin.Y + size.Z);
-            Vector2 topRight = topLeft + new Vector2(size.X, 0);
-            Vector2 bottomLeft = topLeft + new Vector2(0, size.Y);
-            Vector2 bottomRight = bottomLeft + new Vector2(size.X, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft,   });
-            //Debug.WriteLine($"FRONT SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-            
-            // back
-            topLeft = new Vector2(origin.X + (2 * size.Z) + size.X, origin.Y + size.Z);
-            topRight = topLeft + new Vector2(size.X, 0);
-            bottomLeft = topLeft + new Vector2(0, size.Y);
-            bottomRight = bottomLeft + new Vector2(size.X, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft,   });
-            //Debug.WriteLine($"BACK SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-
-
-            // left
-            topLeft = new Vector2(origin.X, origin.Y + size.Z);
-            topRight = topLeft + new Vector2(size.Z, 0);
-            bottomLeft = topLeft + new Vector2(0, size.Y);
-            bottomRight = bottomLeft + new Vector2(size.Z, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft,   });
-            //Debug.WriteLine($"LEFT SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-
-
-            // right
-            topLeft = new Vector2(origin.X + size.X + size.Z, origin.Y + size.Z);
-            topRight = topLeft + new Vector2(size.Z, 0);
-            bottomLeft = topLeft + new Vector2(0, size.Y);
-            bottomRight = bottomLeft + new Vector2(size.Z, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft, });
-            //Debug.WriteLine($"RIGHT SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-
-            // top 
-            topLeft = new Vector2(origin.X + size.Z, origin.Y);
-            topRight = topLeft + new Vector2(size.X, 0);
-            bottomLeft = topLeft + new Vector2(0, size.Z);
-            bottomRight = bottomLeft + new Vector2(size.X, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft, });
-            //Debug.WriteLine($"TOP SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-
-
-            // bottom
-            topLeft = new Vector2(origin.X + size.Z + size.X, origin.Y);
-            topRight = topLeft + new Vector2(size.X, 0);
-            bottomLeft = topLeft + new Vector2(0, size.Z);
-            bottomRight = bottomLeft + new Vector2(size.X, 0);
-
-            allSides.AddRange(new List<Vector2> { topLeft, topRight, bottomRight, bottomLeft,   });
-            //Debug.WriteLine($"BOTTOM SIDE ({topLeft.X},{topLeft.Y}) ({topRight.X},{topRight.Y}) ({bottomLeft.X},{bottomLeft.Y}) ({bottomRight.X},{bottomRight.Y}) ");
-
-            return Normalize(allSides, textureWidth, textureHeight);
-        }
-
-        private Vector3 RescaleVector(float scale, Vector3 vector)
-        {
-            return new Vector3(vector.X * scale, vector.Y * scale, vector.Z * scale);
-
-        }
-
-        
-        public void GenerateGeometry(Cube cube, string TexturePath, out List<Vector3> positions, out List<Vector2> uvs)
-        {
-
-
-            //float scalar = 1 / 8f;
-            //origin = RescaleVector(scalar, origin);
-            //size = RescaleVector(scalar, size);
-
-
-            //// The verticies (edges) of the cube
-            //positions = new List<Vector3>(){
-
-            //    origin + new Vector3(0, size.Y, 0),             // front top left           
-            //    origin + new Vector3(size.X, size.Y, 0),        // front top right          
-            //    origin + new Vector3(size.X, 0, 0),             // front bottom right       
-            //    origin,                                         // front bottom left        
-
-            //    origin + new Vector3(size.X, size.Y, 0),        // right top left           
-            //    origin + new Vector3(size.X, size.Y, -size.Z),  // right top right          
-            //    origin + new Vector3(size.X, 0, -size.Z),       // right bottom right
-            //    origin + new Vector3(size.X, 0, 0),             // right bottom left 
-
-            //    origin + new Vector3(size.X, size.Y, -size.Z),  // back top left            
-            //    origin + new Vector3(0, size.Y, -size.Z),       // back top right 
-            //    origin + new Vector3(0, 0, -size.Z),            // back bottom right 
-            //    origin + new Vector3(size.X, 0, -size.Z),       // back bottom left         
-
-            //    origin + new Vector3(0, size.Y, -size.Z),       // left top left            
-            //    origin + new Vector3(0, size.Y, 0),             // left top right           
-            //    origin,                                         // left bottom right
-            //    origin + new Vector3(0, 0, -size.Z),            // left bottom left         
-
-            //    origin + new Vector3(0, size.Y, -size.Z),       // top top left             
-            //    origin + new Vector3(size.X, size.Y, -size.Z),  // top top right          
-            //    origin + new Vector3(size.X, size.Y, 0),        // top bottom right
-            //    origin + new Vector3(0, size.Y, 0),             // top bottom left          
-
-            //    origin,                                         // bottom top left          
-            //    origin + new Vector3(size.X, 0, 0),             // bottom top right             
-            //    origin + new Vector3(size.X, 0, -size.Z),       // bottom bottom right 
-            //    origin + new Vector3(0, 0, -size.Z),            // bottom bottom left    
-            //};
-
-            ////Debug.WriteLine($"Creating Box of size {size.X}x{size.Y}x{size.Z} at {origin.X},{origin.Y},{origin.Z}");
-
-            //// CCW
-            //List<uint> indices = new List<uint>
-            //{
-            //    0,  1,  2,          // front bottom triangle
-            //    1,  3,  2,          // front top triangle
-
-            //    4,  5,  6,          // back bottom triangle
-            //    5,  7,  6,          // back top triangle
-
-            //    8,  9,  10,         // left bottom triangle
-            //    9, 11,  10,         // left top triangle
-
-            //    12, 13, 14,         // right bottom triangle
-            //    13, 15, 14,         // right top triangle 
-
-            //    16, 17, 18,         // top bottom triangle
-            //    17, 19, 18,         // top top triangle
-
-            //    20, 21, 22,         // bottom bottom triangle
-            //    21, 23, 22,         // bottom top triangle
-            //};
-
-            Vector3 origin = cube.origin;
-            Vector3 size = cube.size;
-            Vector2 uv = cube.uv;
-
-            int width = 0;
-            int height = 0;
-
-            using (Image img = Image.FromFile(TexturePath))
-            {
-                width = img.Width;
-                height = img.Height;
-            }
-
-            RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
-
-            uvs = prism.UVs;
-            positions = prism.Vertices;
-        }
-
         public ModelInfo model { get; set; } = new ModelInfo();
 
         public ModelData(string modelPath, string texturePath)
@@ -360,11 +340,21 @@ namespace BedrockModelViewer
             // Create a list to store each cube mesh
             foreach (Geometry geometry in modelData.minecraftgeometry)
             {
+
+                Dictionary<string, RectangularPrism> rects = new();
+
                 // Process the cubes and create vertices and indices
                 foreach (Bone bone in geometry.bones)
                 {
                     if (bone != null && bone.cubes != null)
                     {
+                        bool mirrorUV = false;
+
+                        Vector3 pivot = bone.pivot;
+                        Vector3 rotation = bone.rotation;
+                        string parent = bone.parent;
+                        string name = bone.name;
+
                         foreach (Cube cube in bone.cubes)
                         {
                             List<Vector3> cubePositions;
@@ -373,7 +363,27 @@ namespace BedrockModelViewer
 
                             Vector3 origin = cube.origin;
                             Vector3 size = cube.size;
-                            Vector2 uv = cube.uv;
+
+                            Vector3 cubePivot = cube.pivot;
+                            Vector3 cubeRot = cube.rotation;
+
+                            if (bone.mirror || cube.mirror)
+                            {
+                                mirrorUV = true;
+                            }
+
+                            // Check for Vector2 or Custom UV
+                            Vector2 uv = new();
+                            CustomUV custom = null;
+                            if (cube.uv is Vector2)
+                            {
+                                uv = (Vector2)cube.uv;
+                            }
+                            else if (cube.uv is CustomUV)
+                            {
+                                custom = (CustomUV)cube.uv;
+                            }
+                            
                             float inflate = cube.inflate;
 
                             int width = 0;
@@ -385,20 +395,173 @@ namespace BedrockModelViewer
                                 height = img.Height;
                             }
 
+                            if (uv == (0, 2))
+                            {
+                                Debug.WriteLine("TEST");
+                            }
+
+                            if (size.X < 0.5f)
+                            {
+                                Debug.WriteLine("WATCH");
+                            }
+
                             RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
 
-                            if (inflate != null)
+                            if (custom != null)
+                            {
+                                if (size.X < .05f)
+                                {
+                                    prism.UVs = RenderTools.CustomPlaneUV(custom, width, height);
+                                }
+                                else
+                                {
+                                    prism.UVs = RenderTools.EvaluateCustomUV(custom, width, height);
+                                }
+                            }
+
+                            if (inflate != 0)
                             {
                                 prism.Inflate(inflate);
                             }
 
-                            model.AddInfo(prism.Vertices, prism.UVs, prism.Indices);
+                            if (mirrorUV)
+                            {
+                                prism.UVs = RenderTools.MirrorUV(prism.UVs);
+                            }
+
+                            prism.rotation = cubeRot;
+                            prism.pivot = cubePivot;
+
+                            bone.rectangles.Add(prism); 
+
+                            if (prism.UVs.Count != prism.Vertices.Count)
+                            {
+                                Debug.WriteLine("Nope");
+                            }
+                        }
+
+                        if (parent != null)
+                        {
+                            Bone Parent = geometry.bones.FirstOrDefault(x => x.name == parent);
+
+                            if (Parent != null)
+                            {
+                                Parent.children.Add(bone);
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"Parent bone not found for {name}");
+                            }
                         }
                     }
                 }
+
+                RotateModel(geometry);
+
+                //// Position each box first
+                //foreach (Bone b in geometry.bones)
+                //{
+                //    if (b != null && b.rectangles != null)
+                //    {
+                //        // Rotate the boxes to their own positions
+                //        foreach (RectangularPrism prism in b.rectangles)
+                //        {
+                //            prism.Rotate();
+                //        }
+                //    }
+                //}
+
+                //// position all boxes according to bone rotation 
+                //foreach (Bone b in geometry.bones)
+                //{
+                //    if (b.rotation != (0, 0, 0))
+                //    {
+                //        Debug.WriteLine($"ROTATE {b.name}");
+                //        b.Rotate();
+                //    }
+                //}
+
+                //// Rotate children & boxes if set (BONE HIERARCHY)
+                //foreach (Bone b in geometry.bones)
+                //{
+                //    foreach (Bone child in b.children)
+                //    {
+                //        child.Rotate(b.rotation, b.pivot);
+                //    }
+                //}
+
+                ////// once all rotations are completed
+                //foreach (Bone b in geometry.bones)
+                //{
+                //    foreach (RectangularPrism rect in b.rectangles)
+                //    {
+                //        model.AddInfo(rect.Vertices, rect.UVs, rect.Indices);
+                //    }
+                //}
+
+
             }
         }
+
+
+        public void RotateModel(Geometry geometry)
+        {
+
+            List<Bone> topmostParent = new List<Bone>();
+
+            // Stage 1: Rotate the boxes to their own positions
+            // Also find topmost parents
+            foreach (Bone b in geometry.bones)
+            {
+                if (b != null && b.rectangles != null)
+                {
+                    // Rotate the boxes to their own positions
+                    foreach (RectangularPrism prism in b.rectangles)
+                    {
+                        prism.Rotate();
+                    }
+                }
+                if (b.parent == null)
+                {
+                    topmostParent.Add(b);
+                }
+            }
+
+            // Stage 2: Position bones and child bones
+            foreach (Bone b in geometry.bones)
+            {
+                if (b.rotation != Vector3.Zero)
+                {
+                    Debug.WriteLine($"ROTATE {b.name}");
+                    b.RotateChildren(b.rotation, b.pivot);
+                }
+            }
+
+
+
+            // Stage 3: Rotate children & boxes if set (BONE HIERARCHY)
+            //foreach (Bone b in topmostParent)
+            // {
+            //    foreach (Bone child in b.children)
+            //    {
+            //        child.RotateChildren(b.rotation, b.pivot);
+            //    }
+            //}
+
+            // Stage 4: Collect the final positions of all vertices
+            foreach (Bone b in geometry.bones)
+            {
+                foreach (RectangularPrism rect in b.rectangles)
+                {
+                    // Add vertex information to your model
+                    model.AddInfo(rect.Vertices, rect.UVs, rect.Indices);
+                }
+            }
+        }
+
     }
+
+    
 
     public class ModelInfo
     {
@@ -408,9 +571,14 @@ namespace BedrockModelViewer
 
         public void AddInfo(List<Vector3> vertices, List<Vector2> uvs, List<uint> indicies)
         {
-                Vertices.AddRange(vertices);
-                UVs.AddRange(uvs);
-                AddIndices(indicies);
+            if (uvs.Count != vertices.Count)
+            {
+                Debug.WriteLine("NOPE");
+            }
+
+            Vertices.AddRange(vertices);
+            UVs.AddRange(uvs);
+            AddIndices(indicies);
         }
 
         private void AddIndices(List<uint> indicies)
@@ -418,10 +586,10 @@ namespace BedrockModelViewer
             uint max = 0;
             if (Indices.Count > 0)
             {
-                 max = Indices.Max() + 1;
+                max = Indices.Max() + 1;
             }
 
-             foreach (uint i in indicies)
+            foreach (uint i in indicies)
             {
                 Indices.Add(i + max);
             }

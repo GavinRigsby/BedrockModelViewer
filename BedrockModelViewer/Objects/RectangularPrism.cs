@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,13 +28,19 @@ namespace BedrockModelViewer.Objects
             private Vector2 origin;
             private Vector3 size;
             private Vector2 textureSize;
-
+            private bool isPlane;
             public List<Vector2> GetUVCoordinates()
             {
                 List<Vector2> result = new List<Vector2>();
-                result.AddRange(GetFaceUV(Faces.FRONT));
-                result.AddRange(GetFaceUV(Faces.RIGHT));
+                if (isPlane)
+                {
+                    result.AddRange(GetFaceUV(Faces.LEFT));
+                    result.AddRange(GetFaceUV(Faces.RIGHT));
+                    return result;
+                }
                 result.AddRange(GetFaceUV(Faces.BACK));
+                result.AddRange(GetFaceUV(Faces.RIGHT));
+                result.AddRange(GetFaceUV(Faces.FRONT));
                 result.AddRange(GetFaceUV(Faces.LEFT));
                 result.AddRange(GetFaceUV(Faces.TOP));
                 result.AddRange(GetFaceUV(Faces.BOTTOM));
@@ -72,12 +79,29 @@ namespace BedrockModelViewer.Objects
                 {
                     width = size.X;
                 }
-                //Debug.WriteLine($"W: {width}, H: {height}");
-                Vector2 TopLeft = ConvertCoordinates(UVOffsets[face]);
-                Vector2 TopRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, 0));
-                Vector2 BottomRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, height));
-                Vector2 BottomLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(0, height));
+
+                Vector2 TopLeft;
+                Vector2 TopRight;
+                Vector2 BottomRight;
+                Vector2 BottomLeft;
+
+                if (face == Faces.TOP || face == Faces.BOTTOM)
+                {
+                    //Debug.WriteLine($"W: {width}, H: {height}");
+                    TopLeft = ConvertCoordinates(UVOffsets[face]);
+                    TopRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, 0));
+                    BottomRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, height));
+                    BottomLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(0, height));
+                }
+                else
+                {
+                    TopRight = ConvertCoordinates(UVOffsets[face]);
+                    TopLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(width, 0));
+                    BottomLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(width, height));
+                    BottomRight = ConvertCoordinates(UVOffsets[face] + new Vector2(0, height));
+                }
                 //Debug.WriteLine($"{face} UV: {TopLeft.X}f/{textureSize.X},{TopLeft.Y}f/{textureSize.Y}  {TopRight.X}f/{textureSize.X},{TopRight.Y}f/{textureSize.Y} {BottomRight.X}f/{textureSize.X},{BottomRight.Y}f/{textureSize.Y} {BottomLeft.X}f/{textureSize.X},{BottomLeft.Y}f/{textureSize.Y}");
+
 
                 List<Vector2> uvCoorinates = new List<Vector2>()
                 { TopLeft, TopRight, BottomRight, BottomLeft };
@@ -90,6 +114,15 @@ namespace BedrockModelViewer.Objects
                 this.origin = origin;
                 this.size = size;
                 this.textureSize = textureSize;
+                CheckForPlane(size);
+            }
+
+            private void CheckForPlane(Vector3 size)
+            {
+                if (size.X < .05f)
+                {
+                    isPlane = true;
+                }
             }
 
             private Vector2 ConvertCoordinates(Vector2 coords)
@@ -115,14 +148,56 @@ namespace BedrockModelViewer.Objects
             }
         }
 
+        // Rotates prism with its own value
+        public void Rotate()
+        {
+            Rotate(rotation, pivot);
+        }
+
+        // Used to rotate prism if parent or higher family is rotated
+        public void Rotate(Vector3 rotation, Vector3 pivot)
+        {
+            if (rotation == (0, 0, 0)) { return; }
+
+            float xRotInRadians = MathHelper.DegreesToRadians(rotation.X);
+            float yRotInRadians = -MathHelper.DegreesToRadians(rotation.Y);
+            float zRotInRadians = -MathHelper.DegreesToRadians(rotation.Z);
+
+            Quaternion xRotation = Quaternion.FromAxisAngle(Vector3.UnitX, xRotInRadians);
+            Quaternion yRotation = Quaternion.FromAxisAngle(Vector3.UnitY, yRotInRadians);
+            Quaternion zRotation = Quaternion.FromAxisAngle(Vector3.UnitZ, zRotInRadians);
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                Vector3 vertex = Vertices[i];
+
+                Vector3 translatedVertex = vertex - (pivot * (1, 1, -1));
+
+                // Apply the rotations in the order: x, y, z
+                Vector3 rotatedVertex = Vector3.Transform(Vector3.Transform(Vector3.Transform(translatedVertex, xRotation), yRotation), zRotation);
+
+                rotatedVertex += (pivot * (1, 1, -1));
+
+                // Replace the original vertex with the rotated one
+                Vertices[i] = rotatedVertex;
+            }
+        }
+
         public class VertData
         {
             private Vector3 Size;
             private Vector3 Position;
-
+            private bool isPlane;
             public List<Vector3> GetVerticies()
             {
                 List<Vector3> result = new List<Vector3>();
+                if (isPlane)
+                {
+                    result.AddRange(GetFaceVerticies(Faces.RIGHT));
+                    result.AddRange(GetFaceVerticies(Faces.LEFT));
+                    return result;
+                }
+
                 result.AddRange(GetFaceVerticies(Faces.FRONT));
                 result.AddRange(GetFaceVerticies(Faces.RIGHT));
                 result.AddRange(GetFaceVerticies(Faces.BACK));
@@ -148,7 +223,7 @@ namespace BedrockModelViewer.Objects
                 List<Vector3> transformedVertices = new List<Vector3>();
                 foreach (var vert in vertices)
                 {
-                    transformedVertices.Add(vert + Position);
+                    transformedVertices.Add((vert + Position) * new Vector3(1, 1, -1));
                 }
                 return transformedVertices;
             }
@@ -203,6 +278,16 @@ namespace BedrockModelViewer.Objects
             {
                 this.Size = size;
                 this.Position = position;
+
+                CheckForPlane(size);
+            }
+
+            private void CheckForPlane(Vector3 size)
+            {
+                if (Size.X < .05f)
+                {
+                    isPlane = true;
+                }
             }
         }
 
@@ -211,11 +296,18 @@ namespace BedrockModelViewer.Objects
         public Vector2 TextureSize { get; set; }
         public Vector2 TextureOrigin { get; set; }
 
-        public void AddIndices()
+        public Vector3 pivot { get; set; }
+
+        public Vector3 rotation { get; set; }
+
+        public List<RectangularPrism> Children { get; set; }
+
+
+        public void AddIndices(int faces = 6)
         {
             Indices.Clear();
             uint indexCount = 0;
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < faces; i++)
             {
                 Indices.Add(0 + indexCount);
                 Indices.Add(1 + indexCount);
@@ -244,7 +336,20 @@ namespace BedrockModelViewer.Objects
 
             Vertices = vertData.GetVerticies();
             UVs = data.GetUVCoordinates();
-            AddIndices();
+
+            if (Vertices.Count != UVs.Count)
+            {
+                Debug.WriteLine("WE GOT ISSUES");
+            }
+
+            if (Size.X < .05f)
+            {
+                AddIndices(2);
+            }
+            else {
+                AddIndices();
+            }
+            
         }
     }
 }
