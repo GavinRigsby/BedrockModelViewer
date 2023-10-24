@@ -1,11 +1,4 @@
 ﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using BedrockModelViewer.Objects;
 using static BedrockModelViewer.Objects.ModelData;
 using static BedrockModelViewer.Objects.ModelData.CustomUV;
 
@@ -233,7 +226,24 @@ namespace BedrockModelViewer.Graphics
         {
             List<Vector2> uvs = new List<Vector2>();
 
-            foreach (UVDATA side in new List<UVDATA> { custom.east, custom.west })
+            Console.WriteLine($"CUSTOM UV (NESWUD): {custom?.north},{custom?.east},{custom?.south},{custom?.west},{custom?.up},{custom?.down}");
+
+            List<UVDATA> sides = new List<UVDATA>();
+
+            if (custom.east != null)
+            {
+                sides.Add(custom.east);
+            }
+            if (custom.west != null)
+            {
+                sides.Add(custom.west);
+            }
+            if (sides.Count < 2)
+            {
+                sides.Add(sides[0]);
+            }
+
+            foreach (UVDATA side in sides)
             {
                 bool right = rightDefined(side);
                 bool bottom = bottomDefined(side);

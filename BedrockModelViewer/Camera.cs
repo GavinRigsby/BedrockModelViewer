@@ -1,17 +1,8 @@
 ﻿using BedrockModelViewer.Graphics;
 using BedrockModelViewer.Objects;
-using OpenTK.Graphics.GL;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BedrockModelViewer
 {

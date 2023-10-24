@@ -1,17 +1,10 @@
 ﻿
+using BedrockModelViewer.Graphics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTK.Mathematics;
 using System.Diagnostics;
 using Image = System.Drawing.Image;
-using System.Net.NetworkInformation;
-using OpenTK.Mathematics;
-using System.Reflection.Metadata.Ecma335;
-using OpenTK.Graphics.OpenGL;
-using System.Drawing;
-using BedrockModelViewer.Graphics;
-using OpenTK.Graphics.GL;
-using static BedrockModelViewer.Objects.ModelData;
-using System.Data;
 
 namespace BedrockModelViewer.Objects
 {
@@ -205,13 +198,26 @@ namespace BedrockModelViewer.Objects
 
         public class Geometry
         {
+
+            public class Description
+            {
+                [JsonProperty(PropertyName = "texture_height")]
+                public int textureHeight { get; set; }
+
+                [JsonProperty(PropertyName = "texture_width")]
+                public int textureWidth { get; set; }
+            }
+
             [JsonProperty(PropertyName = "bones")]
             public List<Bone> bones { get; set; }
 
-            [JsonProperty(PropertyName = "textureheight")]
+            [JsonProperty(PropertyName = "description")]
+            public Description description { get; set; }
+
+            [JsonProperty(PropertyName = "texture_height")]
             public int textureHeight { get; set; }
 
-            [JsonProperty(PropertyName = "texturewidth")]
+            [JsonProperty(PropertyName = "texture_width")]
             public int textureWidth { get; set; }
         }
 
@@ -250,7 +256,7 @@ namespace BedrockModelViewer.Objects
                     }
                 }
 
-                JToken jToken = null;
+                JToken? jToken = null;
 
                 if (matchingGeometryTokens.Count > 0)
                 {
@@ -340,6 +346,18 @@ namespace BedrockModelViewer.Objects
             // Create a list to store each cube mesh
             foreach (Geometry geometry in modelData.minecraftgeometry)
             {
+                int geoWidth = geometry.textureWidth;
+                int geoHeight = geometry.textureHeight;
+
+                if (geoWidth == 0 && geometry.description != null)
+                {
+                    geoWidth = geometry.description.textureWidth;
+                }
+
+                if (geoHeight == 0 && geometry.description != null)
+                {
+                    geoHeight = geometry.description.textureHeight;
+                }
 
                 Dictionary<string, RectangularPrism> rects = new();
 
@@ -395,17 +413,8 @@ namespace BedrockModelViewer.Objects
                                 height = img.Height;
                             }
 
-                            if (uv == (0, 2))
-                            {
-                                Debug.WriteLine("TEST");
-                            }
+                            RectangularPrism prism = new RectangularPrism(origin, size, (geoWidth, geoHeight), uv);
 
-                            if (size.X < 0.5f)
-                            {
-                                Debug.WriteLine("WATCH");
-                            }
-
-                            RectangularPrism prism = new RectangularPrism(origin, size, (width, height), uv);
 
                             if (custom != null)
                             {

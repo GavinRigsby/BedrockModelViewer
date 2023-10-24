@@ -1,8 +1,7 @@
 {
   "profiles": {
     "BedrockModelViewer": {
-      "commandName": "Project",
-      "commandLineArgs": "-m \"D:\\MCModTools\\MCModTools\\bin\\Debug\\net5.0-windows\\Temp\\Dinomonsters\\RP\\models\\entity\\dinosaurs\\spinosaurus.geo.json\" -t \"D:\\MCModTools\\MCModTools\\bin\\Debug\\net5.0-windows\\Temp\\Dinomonsters\\RP\\textures\\entity\\dinosaurs\\spinosaurus.png\""
+      "commandName": "Project"
     }
   }
 }

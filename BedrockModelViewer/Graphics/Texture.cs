@@ -12,7 +12,7 @@ namespace BedrockModelViewer.Graphics
     {
         public int ID;
 
-        public Texture(String filepath)
+        public Texture(string filepath)
         {
             ID = GL.GenTexture();
 
@@ -27,14 +27,16 @@ namespace BedrockModelViewer.Graphics
 
 
             StbImage.stbi_set_flip_vertically_on_load(1);
-            ImageResult dirtTexture = ImageResult.FromStream(File.OpenRead("Resources/" + filepath), ColorComponents.RedGreenBlueAlpha);
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string resourceDirectory = Path.Combine(appDirectory, "Resources");
+            string textureFile = Path.Combine(resourceDirectory, filepath);
 
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, dirtTexture.Width, dirtTexture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, dirtTexture.Data);
+            ImageResult texture = ImageResult.FromStream(File.OpenRead(textureFile), ColorComponents.RedGreenBlueAlpha);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, texture.Width, texture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, texture.Data);
 
             // unbind the texture
             Unbind();
         }
-
         public void Bind() { GL.BindTexture(TextureTarget.Texture2D, ID); }
         public void Unbind() { GL.BindTexture(TextureTarget.Texture2D, 0); }
         public void Delete() { GL.DeleteTexture(ID); }

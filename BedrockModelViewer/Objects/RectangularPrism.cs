@@ -1,12 +1,5 @@
 ﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BedrockModelViewer.Objects
 {
@@ -87,18 +80,21 @@ namespace BedrockModelViewer.Objects
 
                 if (face == Faces.TOP || face == Faces.BOTTOM)
                 {
-                    //Debug.WriteLine($"W: {width}, H: {height}");
+                    Debug.WriteLine($"TL: {UVOffsets[face].X}, {UVOffsets[face].Y}");
                     TopLeft = ConvertCoordinates(UVOffsets[face]);
                     TopRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, 0));
                     BottomRight = ConvertCoordinates(UVOffsets[face] + new Vector2(width, height));
+                    Debug.WriteLine($"BR: {(UVOffsets[face] + new Vector2(width, height)).X}, {(UVOffsets[face] + new Vector2(width, height)).Y}");
                     BottomLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(0, height));
                 }
                 else
                 {
                     TopRight = ConvertCoordinates(UVOffsets[face]);
                     TopLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(width, 0));
+                    Debug.WriteLine($"TL: {(UVOffsets[face] + new Vector2(width, 0)).X}, {(UVOffsets[face] + new Vector2(width, 0)).Y}");
                     BottomLeft = ConvertCoordinates(UVOffsets[face] + new Vector2(width, height));
                     BottomRight = ConvertCoordinates(UVOffsets[face] + new Vector2(0, height));
+                    Debug.WriteLine($"BR: {(UVOffsets[face] + new Vector2(0, height)).X}, {(UVOffsets[face] + new Vector2(0, height)).Y}");
                 }
                 //Debug.WriteLine($"{face} UV: {TopLeft.X}f/{textureSize.X},{TopLeft.Y}f/{textureSize.Y}  {TopRight.X}f/{textureSize.X},{TopRight.Y}f/{textureSize.Y} {BottomRight.X}f/{textureSize.X},{BottomRight.Y}f/{textureSize.Y} {BottomLeft.X}f/{textureSize.X},{BottomLeft.Y}f/{textureSize.Y}");
 
@@ -319,7 +315,7 @@ namespace BedrockModelViewer.Objects
             }
         }
 
-        public RectangularPrism(Vector3 origin, Vector3 size, Vector2 textureSize, Vector2 textureOrigin): base (origin)
+        public RectangularPrism(Vector3 origin, Vector3 size, Vector2 textureSize, Vector2 textureOrigin) : base (origin)
         {
             this.Origin = origin;
             this.Size = size;

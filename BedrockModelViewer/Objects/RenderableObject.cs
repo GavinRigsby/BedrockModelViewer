@@ -36,9 +36,13 @@ namespace BedrockModelViewer.Objects
         {
             this.position = position;
             textureName = Path.GetFileName(texturePath);
-            File.Copy(texturePath, "Resources/" + textureName, true);
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string resourceDirectory = Path.Combine(appDirectory, "Resources");
+            string textureFile = Path.Combine(resourceDirectory, textureName);
+            Directory.CreateDirectory(resourceDirectory);
+            File.Copy(texturePath, textureFile, true);
         }
-        
+
         // Positions the model based on currently set postion
         public void SetPosition()
         {

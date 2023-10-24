@@ -16,6 +16,11 @@ namespace BedrockModelViewer.Graphics
             // create the shader program
             ID = GL.CreateProgram();
 
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            vertexShaderFilepath = Path.Combine(baseDirectory, "Shaders", vertexShaderFilepath);
+            fragmentShaderFilepath = Path.Combine(baseDirectory, "Shaders", fragmentShaderFilepath);
+
+
             // create the vertex shader
             int vertexShader = GL.CreateShader(ShaderType.VertexShader);
             // add the source code from "Default.vert" in the Shaders file
@@ -50,7 +55,7 @@ namespace BedrockModelViewer.Graphics
 
             try
             {
-                using (StreamReader reader = new StreamReader("../../../Shaders/" + filePath))
+                using (StreamReader reader = new StreamReader(filePath))
                 {
                     shaderSource = reader.ReadToEnd();
                 }

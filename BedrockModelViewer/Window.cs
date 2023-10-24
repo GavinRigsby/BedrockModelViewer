@@ -312,13 +312,8 @@ namespace BedrockModelViewer
         protected override void OnLoad()
         {
             base.OnLoad();
-            Directory.CreateDirectory("Resources");
-            File.Copy(_texturePath, "Resources/texture.png", true);
             gameModel = new ModelObject(new Vector3(0f, 0f, 0f), _modelPath, _texturePath);
             shaderProgram = new ShaderProgram("default.vert", "default.frag");
-
-            testBlock = new Block(new Vector3(0, 0, 0), "../../../ExampleFiles/dirt.png");
-
             // Enable 3D
             GL.Enable(EnableCap.DepthTest);
 
@@ -377,7 +372,6 @@ namespace BedrockModelViewer
             {
                 if (ScreenShotImages.Count < 2)
                 {
-                    Debug.WriteLine("Screenshot");
                     SaveModelImage();
                     RenderCount = 0;
                 }
