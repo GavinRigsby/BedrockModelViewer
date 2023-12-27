@@ -8,7 +8,8 @@ This is not perfect by and means and does not allow editing of the models.
 
 Works with Minecraft Bedrock model .json files
 
-Usage: BedRockModelViewer -t texture.png -m model.json -o thumb.png
+
+## Usage: BedRockModelViewer -t texture.png -m model.json -o thumb.png
 
 -t or --texture defines the texture UV for the model
 
@@ -18,7 +19,9 @@ Usage: BedRockModelViewer -t texture.png -m model.json -o thumb.png
 
 Using Output will save the image to a file but not open live view. (Used for scripting mass model thumbnail generation)
 
-Viewer Controls:
+
+## Viewer Controls:
+
 
 Use WASD for movement (forward, left, back, right)
 
@@ -35,7 +38,7 @@ Saves image to that specified in console arguments.
 Saved image has background removed.
 
 
-Issues:
+## Issues:
 
 Note: These issues are occasional and not in all cases
 
