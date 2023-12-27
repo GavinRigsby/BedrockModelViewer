@@ -11,7 +11,9 @@ Works with Minecraft Bedrock model .json files
 Usage: BedRockModelViewer -t texture.png -m model.json -o thumb.png
 
 -t or --texture defines the texture UV for the model
+
 -m or --model defines the json model
+
 -o or --output defines the output file 
 
 Using Output will save the image to a file but not open live view. (Used for scripting mass model thumbnail generation)
@@ -19,8 +21,11 @@ Using Output will save the image to a file but not open live view. (Used for scr
 Viewer Controls:
 
 Use WASD for movement (forward, left, back, right)
+
 Space to fly up
+
 Shift to fly down
+
 Arrow keys or mouse movement for rotating camera (Left Alt to activate mouse look).
 
 Output Image:
