@@ -31,7 +31,8 @@ Shift to fly down
 
 Arrow keys or mouse movement for rotating camera (Left Alt to activate mouse look).
 
-Output Image:
+
+##Output Image:
 
 Saves image to that specified in console arguments. 
 
